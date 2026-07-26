@@ -1,0 +1,20 @@
+# Render Infrastructure as Code (Blueprint) Specification
+# Website: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: smilespark-ai
+    runtime: node
+    plan: free
+    region: singapore # Change to your preferred region (e.g. oregon, frankfurt, singapore)
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # Prompts for value in Render Dashboard
+      - key: GEMINI_API_KEY
+        sync: false # Prompts for value in Render Dashboard
