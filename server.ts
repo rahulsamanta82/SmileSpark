@@ -88,7 +88,7 @@ async function callGeminiWithFallback<T>(fn: (modelName: string) => Promise<T>):
 // 1. Admin Authentication Route
 app.post('/api/admin/login', async (req, res) => {
   const { email, password } = req.body;
-  if (email === 'admin@smilespark.ai' && password === 'admin123') {
+  if (email === 'admin@smilespark.ai' && password === 'aadmin123') {
     await logActivityToMongo('admin_login', `Admin logged in (${email})`);
     return res.json({
       success: true,
