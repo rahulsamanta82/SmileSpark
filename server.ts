@@ -1,17 +1,14 @@
 import express from 'express';
 import http from 'http';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
 import { Server as SocketIOServer } from 'socket.io';
 import { setupSocketIO, getChatStats, getChatReports, getLiveOnlineUsers, getLiveActiveRooms, clearPresenceState } from './src/server/socketHandler.js';
 
-// Load environment variables
 dotenv.config();
 
-// Import MongoDB database connection & models
 import {
   connectMongoDB,
   getMongoConnectionStatus,
@@ -33,11 +30,14 @@ import {
   DreamMilestone,
 } from './src/db/mongodb.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+const __dirname = process.cwd();
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+const PORT = process.env.PORT
+  ? parseInt(process.env.PORT, 10)
+  : 3000;
 
 // Allow large payloads for base64 photo uploads
 app.use(express.json({ limit: '50mb' }));
@@ -144,7 +144,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
     });
 
     const storageUsedMb = Number((totalBytes / (1024 * 1024)).toFixed(2));
-    await Analytics.updateOne({}, { $set: { storageUsedMb } }).catch(() => {});
+    await Analytics.updateOne({}, { $set: { storageUsedMb } }).catch(() => { });
 
     // Recent Upload / System Activity
     const recentActivity = await ActivityLog.find().sort({ timestamp: -1, createdAt: -1 }).limit(8);
@@ -870,7 +870,7 @@ Respond ONLY with JSON using this schema:
       createdAt: new Date().toISOString(),
     });
 
-    await newQuoteDoc.save().catch(() => {});
+    await newQuoteDoc.save().catch(() => { });
 
     return res.json({
       success: true,
@@ -1065,7 +1065,7 @@ app.delete('/api/photos/:id', async (req, res) => {
     const { id } = req.params;
     const result = await Photo.deleteOne(buildIdQuery(id));
     if (result.deletedCount > 0) {
-      await Analytics.updateOne({}, { $inc: { totalDeletions: 1 } }).catch(() => {});
+      await Analytics.updateOne({}, { $inc: { totalDeletions: 1 } }).catch(() => { });
       await logActivityToMongo('photo_delete', `Photo ID ${id} permanently removed from MongoDB Atlas`);
       return res.json({ success: true, message: 'Photo deleted successfully' });
     }
@@ -1086,14 +1086,14 @@ app.post('/api/admin/photos/bulk-delete', async (req, res) => {
       const countBefore = await Photo.countDocuments();
       const result = await Photo.deleteMany({});
       deletedCount = result.deletedCount || countBefore;
-      await Analytics.updateOne({}, { $inc: { totalDeletions: deletedCount } }).catch(() => {});
+      await Analytics.updateOne({}, { $inc: { totalDeletions: deletedCount } }).catch(() => { });
       await logActivityToMongo('bulk_photo_delete', `All ${deletedCount} photos permanently removed from MongoDB Atlas storage by Admin`);
     } else if (Array.isArray(ids) && ids.length > 0) {
       const result = await Photo.deleteMany({
         $or: [{ id: { $in: ids } }, { _id: { $in: ids } }],
       });
       deletedCount = result.deletedCount || 0;
-      await Analytics.updateOne({}, { $inc: { totalDeletions: deletedCount } }).catch(() => {});
+      await Analytics.updateOne({}, { $inc: { totalDeletions: deletedCount } }).catch(() => { });
       await logActivityToMongo('bulk_photo_delete', `Bulk deleted ${deletedCount} selected photos from MongoDB Atlas storage`);
     }
 
